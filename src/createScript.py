@@ -82,11 +82,7 @@ print colored("creating Script " + script_name + "...", "blue")
 script_file = open(script_name, 'w')
 
 # get offsets
-start_offset = 0
-if inDebug:
-    find_offset, avoid_offsets = getOffsets( r2proj, True )
-else:
-    find_offset, avoid_offsets, start_offset = getOffsets( r2proj, True, True )
+find_offset, avoid_offsets, start_offset = getOffsets( r2proj, True )
 
 # get binary name and create script header
 binaryname = getBinaryName(r2proj)
