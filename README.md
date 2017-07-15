@@ -62,7 +62,7 @@ name)
 After the flag creation, create Hooks or Asserts if you need one and afterwards just call the r4ge
 macro.
 
-![alt text](/r4ge/doc/usage_image.png)
+![alt text](/doc/usage_image.png)
 
 
 ## Questions
