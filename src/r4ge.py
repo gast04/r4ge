@@ -66,7 +66,6 @@ if inDebug:
 
 else:
     # prepare static execution -> no copying of the memory
-
     start_state = angrproj.factory.call_state(start_offset, remove_options={simuvex.o.LAZY_SOLVES})
 
 
@@ -92,7 +91,8 @@ pg = angrproj.factory.path_group(start_state)
 # convert find_offsets to basic block address
 find_offset = getBasicBlockAddr(angrproj, find_offset)
 pg.explore(find=getFindFunction(pg, find_offset, isX86), avoid=avoid_offsets)
-#pg.explore(find=find_offset, avoid=avoid_offsets)
+#print "use simple, start:{} find:{} avoid:{}".format(hex(start_offset) , hex(find_offset), [hex(x) for x in avoid_offsets])
+#pg.explore(find=0x804881f, avoid=avoid_offsets)
 print "\nPathGroup Results:",pg
 
 
@@ -135,7 +135,7 @@ else:
     print colored('''
     Script-Variables:
         proj        ... angr project
-        callstate   ... start state
+        start_state ... start state
         pg          ... path_group
     {}'''.format("    state_found ... result state of exploration\n" if state_found is not None else ""), "green")
 

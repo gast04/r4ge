@@ -8,7 +8,7 @@ def createImports():
     # shift to left to avoid spaces and tabs in final script
     header = '''#!/usr/bin/env python2.7
 
-import angr, simuvex
+import angr, simuvex, IPython
 '''
     return header
 
@@ -115,6 +115,7 @@ def memoryToJson(r2proj, start, size, name, isX86):
     return json_string
 
 
+
 # optimized version of the json function
 def memoryToFile(r2proj, start, size, name, isX86):
     # get raw data
@@ -130,6 +131,7 @@ def memoryToFile(r2proj, start, size, name, isX86):
     content_split = content_raw.split('\n')
     for entry in content_split:
         entry_split = entry.split(' ')
+        #print "addr:{} val:{}".format(entry_split[0].strip(), parseValue( entry_split[1], isX86 ))
         mem_str += str(parseValue( entry_split[1], isX86 )) + ","
 
     return mem_str[:-1] # remove last comma
@@ -147,7 +149,7 @@ def createHooks( r2proj ):
         hook_function = "def hook_{0}(state):\n".format(hook[3])
         instructions = hook[2]
         for key, value in instructions.items():
-            if key.startswith("e"):    # x86 register
+            if key.startswith("e") or key.startswith("r"):    # x86 register
                 hook_function += "    state.regs.{0} = {1}\n".format(key, hex(value) )
             elif key.startswith("[0"):  # memory, [0x1234]=value
                 hook_function += "    state.memory.store({0}, {1}, endness=state.arch.memory_endness)\n".format( key[1:-1], hex(value) )
@@ -232,7 +234,7 @@ def loadMemory( start_state ):
     mem_lines = mem_file.readlines()
 
     stack_start = int(mem_lines[0].split(',')[2], 16)
-    isX86 = mem_lines[0].split(',')[3] == "True"
+    isX86 = mem_lines[0].split(',')[1] == "True"
 
     for content in mem_lines[1].split(','):
         start_state.memory.store(stack_start, int(content), endness=start_state.arch.memory_endness)
@@ -241,7 +243,7 @@ def loadMemory( start_state ):
     # load heap
     if len(mem_lines) > 2:
         heap_start = int(mem_lines[2].split(',')[2], 16)
-        isX86 = mem_lines[2].split(',')[3] == "True"
+        isX86 = mem_lines[2].split(',')[1] == "True"
 
         for content in mem_lines[3].split(','):
             start_state.memory.store(heap_start, int(content), endness=start_state.arch.memory_endness)
@@ -263,6 +265,11 @@ pg.explore(find={0}, avoid=[{1}])
     return content
 
 
+'''
+    template code to concretize symbolic memory
+    or open an IPython shell if no path is found
+    -> usefull for creating a script in static mode..
+'''
 def printSolution( r2proj ):
 
     # 0=offset, 1=size, 2=name
@@ -271,13 +278,25 @@ def printSolution( r2proj ):
     content = '''
 # print soltion if we found a path
 if len(pg.found) > 0:
-    foundstate = pg.found[0].state'''
+    state_found = pg.found[0].state
+    print "found the target!"
+    '''
 
     for variable in symb_variables:
         tmp = '''
-    concrete_memory = foundstate.memory.load({0}, {1}) # {2}
-    print foundstate.se.any_str(concrete_memory)'''.format(hex(variable[0]), variable[1], variable[2])
+    concrete_memory = state_found.memory.load({0}, {1}) # {2}
+    print state_found.se.any_str(concrete_memory)'''.format(hex(variable[0]), variable[1], variable[2])
         content += tmp
+
+    if len(symb_variables) == 0: # -> check for static mode
+        content += "IPython.embed()"
+
+    content += '''
+else:
+    print "start IPython shell"
+    print "Variables: state_found, start_state, pg, proj"
+    IPython.embed()
+    '''
 
     return content
 
