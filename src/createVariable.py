@@ -31,11 +31,14 @@
         symb naming convention: $r4ge.symbx
         example call:
         .(markMemSymbolic 0xfff2a23b 7 userinput)
+
+    Note:
+        createVariable.py should not import angr because this will make
+        it slow and it is not needed for creating variables in r2
 '''
 
 import r2pipe, sys, re
 from termcolor import colored
-from Helper.memStoreHelper import *
 from Helper.r4geHelper import *
 
 

@@ -1,7 +1,7 @@
 '''
     main plugin file to perform symbolic execution
 '''
-import r2pipe, angr, simuvex, IPython
+import r2pipe, angr, simuvex, IPython, threading, time
 from termcolor import colored
 from Helper.memStoreHelper import *
 from Helper.hookHandler import *
@@ -29,9 +29,18 @@ if ( inDebug == False and start_offset == 0):
     print colored("no start flag found, this is necessary for using the static mode! \nstop execution", "red", attrs=["bold"])
     exit(0)
 
+
+# check if binary is PIE, if yes -> set offset to r2 offset
+ispie, binoffset = isPIE(r2proj)
+load_options = {}
+load_options['auto_load_libs'] = False
+if ispie:
+    print ("binary is PIE, loaded on address: {}".format(hex(binoffset)))
+    load_options['main_opts'] = {'custom_base_addr': binoffset}
+
 # get binary name and create angr project
 binaryname = getBinaryName(r2proj)
-angrproj = angr.Project(binaryname, load_options={"auto_load_libs":False})
+angrproj = angr.Project(binaryname, load_options=load_options)
 isX86 = isArchitectureX86(r2proj) # get the architecture type x86 or x64
 
 if inDebug:
@@ -88,12 +97,44 @@ if len(assert_variables):
 print colored("start symbolic execution, find:{}, avoid:{}".format(hex(find_offset), [hex(x) for x in avoid_offsets]), "blue", attrs=["bold"])
 pg = angrproj.factory.path_group(start_state)
 
+
 # convert find_offsets to basic block address
 find_offset = getBasicBlockAddr(angrproj, find_offset)
-pg.explore(find=getFindFunction(pg, find_offset, isX86), avoid=avoid_offsets)
-#print "use simple, start:{} find:{} avoid:{}".format(hex(start_offset) , hex(find_offset), [hex(x) for x in avoid_offsets])
-#pg.explore(find=0x804881f, avoid=avoid_offsets)
-print "\nPathGroup Results:",pg
+
+start_with_threads = False
+if start_with_threads:
+    # TODO: improve
+    kill_printer = False
+    start_time = time.time()
+    def explorer():
+        global pg
+        global kill_printer
+        pg.explore(find=getFindFunction(pg, find_offset, isX86), avoid=avoid_offsets)
+        kill_printer = True
+        #print "use simple, start:{} find:{} avoid:{}".format(hex(start_offset) , hex(find_offset), [hex(x) for x in avoid_offsets])
+        #pg.explore(find=0x804881f, avoid=avoid_offsets)
+
+    def printer():
+        global kill_printer
+        global start_time
+        while(not kill_printer):
+            printExecTime(time.time()-start_time, pg)
+            time.sleep(5)    # print pg every two seconds
+
+    # create and start threads
+    exp = threading.Thread(target=explorer)
+    pri = threading.Thread(target=printer)
+    exp.start()
+    pri.start()
+    exp.join()  # wait
+
+else:
+    # normal start without information during exploration
+    # killing exploration with ctrl+c is possible
+    pg.explore(find=getFindFunction(pg, find_offset, isX86), avoid=avoid_offsets)
+
+
+print "\nPathGroup Results:", pg
 
 
 state_found = None

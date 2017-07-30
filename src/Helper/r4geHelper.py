@@ -95,7 +95,7 @@ def getFindFunction(pg, find_target, isX86):
 
         ip = path.state.regs.eip if isX86 else path.state.regs.rip
         if not ip.concrete:
-            print "EIP is Symblic, maybe Bufferoverflow?.."
+            print "EIP is Symbolic, maybe Bufferoverflow?.."
         else:
             try:
                 if path.state.assert_failed == True:
@@ -110,3 +110,156 @@ def getFindFunction(pg, find_target, isX86):
                 pg.found.append(path)
 
     return findFunction
+
+
+'''
+    check if binary is PIE
+    use r2 check so that we do not have to load
+    the binary in angr which is slow
+'''
+def isPIE(r2proj):
+    bininfo = r2proj.cmdj("ij~pic")
+    if bininfo['bin']['pic']:
+        bin_addr = r2proj.cmdj("ej")['bin.baddr']
+        return True, bin_addr
+    else:
+        return False, 0
+
+
+'''
+    Symbolic memory regions are stored as r2 variables
+    create r2 variable with:
+        $r4ge.symbx='0x1234,7,userinput'
+    (where the x after symb is a running variable)
+
+    r2 help:
+    delte variables with: $[varname]=
+    ( the ''='  stands for deleting )
+'''
+def getSymbolicMemoryRegions( r2proj ):
+
+    # get all variables from r2 and store in a list
+    variables = r2proj.cmd("$ ~r4ge.symb")
+    if len(variables) == 0:
+        return []   # no variables
+
+    variables_split = variables.split('\n')
+    symb_vars = []
+    for var in variables_split:
+        symb_vars.append(var[1:]) # entry starts with '$' -> remove it
+
+    # dict with offset and other content
+    symb_variables = []
+    for var in symb_vars:
+        var_content = r2proj.cmd("${0}?".format(var))
+        var_split = var_content.split(';')
+        # 0=offset, 1=size, 2=name
+        #offset = parseValue(var_split[0], isX86)
+        symb_variables.append([ int(var_split[0], 16), int(var_split[1], 10), var_split[2] ])
+
+    return symb_variables
+
+
+'''
+    get all Asserts, stored as r2 variables with the naming convention: $r4ge.assertx
+
+    example var content
+    0x08048477;eax<=0x5;checkEAX
+    0x08048477;[0x08048477]<=0x5;checkEAX TODO
+'''
+def getAsserts( r2proj ):
+
+    # get all variables from r2 and store in a list
+    variables = r2proj.cmd("$ ~r4ge.assert")
+    if len(variables) == 0:
+        return []   # no variables
+
+    assert_variables = []
+    asserts_raw = variables.split('\n')
+    for var in asserts_raw:
+        content = r2proj.cmd("{0}?".format(var))
+        content_split = content.split(';') # 0=offset, 1=comparison, 2=comment
+
+        assert_var = [] # save instruction as list: 0=isReg, 1=reg|memAddr, 2=operator, 3=value
+        assert_var.append(int(content_split[0],16))
+
+        comp = parseComparison(content_split[1])    # parse comparisons
+        assert_var.append(comp)    # append comparison of type list
+        assert_var.append(content_split[2]) # append comment/name
+
+        assert_variables.append(assert_var) # append assert variable to list
+
+    return assert_variables
+
+
+'''
+    get all Hooks, stored as r2 variables with the naming convention:
+        $r4ge.hookx
+        (x is a running variable)
+
+    example hook content:
+    0x08048477;5;eax=0x5;patchStrlen
+'''
+def getHooks( r2proj ):
+
+    # get all variables from r2 and store in a list
+    variables = r2proj.cmd("$ ~r4ge.hook")
+    if len(variables) == 0:
+        return []   # no variables
+
+    # dict with offset and other content
+    hook_variables = []
+    hooks_raw = variables.split('\n')
+    for var in hooks_raw:
+        content = r2proj.cmd("{0}?".format(var))
+        var_split = content.split(';')
+        # 0=offset, 1=patch_size, 2=instructions, 3=comment
+
+        # save instructions in dictionary
+        instructions = {}
+        instr_split = var_split[2].split(',')
+        for instr in instr_split:
+            tmp = instr.split('=')
+            # 0=register, 1=value
+            instructions[tmp[0]] = int(tmp[1], 16)
+
+        hook_variables.append([ int(var_split[0], 16), int(var_split[1], 16), instructions, var_split[3] ])
+
+    return hook_variables
+
+
+'''
+    parse the Comparison from an Assert out of the raw String: eax<=0x4
+'''
+def parseComparison(comp_raw):
+
+    ret_comps = []
+    comps = comp_raw.split(',') # allow muliple comparisons
+    for comp in comps:
+
+        tmp = []
+        if comp.startswith("e") or comp.startswith("r"): # register comparison
+            tmp.append(True)
+            tmp.append(comp[0:3])
+            comp = comp[3:]    # continue with the rest of the comparison
+        else:
+            # TODO: memory comparison
+            tmp.append(False)
+            tmp.append(int(comp[1:11], 16))   # len 10 for x86
+            comp = comp[12:]
+
+        op_length = comp.find("0x") # find start of value
+        tmp.append(comp[:op_length]) # add operator
+        tmp.append(int(comp[op_length:], 16)) # add value
+
+        # add parsed comparisons to return list
+        ret_comps.append(tmp)
+
+    return ret_comps
+
+
+'''
+    print the execution time in a readable format
+'''
+def printExecTime(t, pg):
+    print ("{} {} {}, status: {}".format( int(t/60/60), int(t/60)%60, int(t%60), pg))
