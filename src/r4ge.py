@@ -101,7 +101,7 @@ pg = angrproj.factory.path_group(start_state)
 # convert find_offsets to basic block address
 find_offset = getBasicBlockAddr(angrproj, find_offset)
 
-start_with_threads = False
+start_with_threads = True # in testing mode!!
 if start_with_threads:
     # TODO: improve
     kill_printer = False

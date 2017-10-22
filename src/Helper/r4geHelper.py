@@ -262,4 +262,4 @@ def parseComparison(comp_raw):
     print the execution time in a readable format
 '''
 def printExecTime(t, pg):
-    print ("{} {} {}, status: {}".format( int(t/60/60), int(t/60)%60, int(t%60), pg))
+    print ("{} {:02d} {:02d}, status: {}".format( int(t/60/60), int(t/60)%60, int(t%60), pg))
