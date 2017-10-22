@@ -105,7 +105,7 @@ def getFindFunction(pg, find_target, isX86):
                 pass # happens because assert_failed is custom generated
 
             # check if we reached the find target
-            ip_content = path.state.se.any_int(ip)
+            ip_content = path.state.se.eval(ip)
             if ip_content == find_target:
                 pg.found.append(path)
 

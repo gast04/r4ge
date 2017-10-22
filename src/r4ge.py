@@ -95,13 +95,13 @@ if len(assert_variables):
 
 # start the symbolic execution
 print colored("start symbolic execution, find:{}, avoid:{}".format(hex(find_offset), [hex(x) for x in avoid_offsets]), "blue", attrs=["bold"])
-pg = angrproj.factory.path_group(start_state)
+pg = angrproj.factory.simgr(start_state, threads=10)
 
 
 # convert find_offsets to basic block address
 find_offset = getBasicBlockAddr(angrproj, find_offset)
 
-start_with_threads = True # in testing mode!!
+start_with_threads = False # in testing mode!!
 if start_with_threads:
     # TODO: improve
     kill_printer = False
@@ -153,8 +153,8 @@ if inDebug:
 
     # 0=offset, 1=size, 2=name, 3=symb_var
     for symb_memory in symb_memories:
-        symb_memory.append( state_found.se.any_str(symb_memory[3]) )
-        # value_int = state_found.state.se.any_int(symb_memory)
+        symb_memory.append( state_found.se.eval(symb_memory[3], cast_to=str) )
+        # value_int = state_found.state.se.eval(symb_memory)
         # state_found.memory.load(symb_addr, symb_size)
         print colored("symbolic memory - str: {0} , hex: 0x{1} ".format(symb_memory[4], symb_memory[4].encode('hex')), "green")
         #print "dumps(1):",state_found.posix.dumps(1) # maybe also print the posix dumps

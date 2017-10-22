@@ -16,19 +16,19 @@ from termcolor import colored
 def compare( state, reg, operator, value):
     fail = False
     if operator == "#":
-        if not state.se.any_int(reg) > value:
+        if not state.se.eval(reg) > value:
             fail = True
     elif operator == "<":
-        if not state.se.any_int(reg) < value:
+        if not state.se.eval(reg) < value:
             fail = True
     elif operator == "==":
-        if not state.se.any_int(reg) == value:
+        if not state.se.eval(reg) == value:
             fail = True
     elif operator == "#=":
-        if not state.se.any_int(reg) >= value:
+        if not state.se.eval(reg) >= value:
             fail = True
     elif operator == "<=":
-        if not state.se.any_int(reg) <= value:
+        if not state.se.eval(reg) <= value:
             fail = True
     else:
         print "Assert Fail: unknown operator"
@@ -105,7 +105,7 @@ def make_assert(comparisons, assert_name):
                     fail = compare( state, reg, operator, value)
                     if fail:
                         print colored("Assert {} failed, {} is {}".format(assert_name, comparison[1],
-                            hex(state.se.any_int(reg))), "red", attrs=["bold"])
+                            hex(state.se.eval(reg))), "red", attrs=["bold"])
                         state.assert_failed = True  # create custom assert failed flag
             else:
                 print "assert for memory not implemented"
