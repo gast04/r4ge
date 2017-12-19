@@ -26,8 +26,7 @@ the variable)
 ```
 
 create hooks in r2 and patch function calls or other statements (syntax of the instructions: rax=0x4
-or 
-rax=0x4;rbx=0x10)
+or rax=0x4;rbx=0x10)
 ```sh
 (addHook addr instructions bytes comment, #!pipe python2.7 /pathToFile/createVariable.py hook $0 $1
 $2 $3)
@@ -36,7 +35,7 @@ $2 $3)
 create asserts to check register values during exploration (syntax of the instructions: rax==0x3 or
 rax#=0x3;rax<=0x10) Note: # is used instead of >, cause r2 uses > as pipe operator.
 ```sh
-(addAssert addr assertions bytes comment, #!pipe python2.7 /pathToFile/createVariable.py assert $0
+(addAssert addr assertions comment, #!pipe python2.7 /pathToFile/createVariable.py assert $0
 $1 $2)
 ```
 
@@ -45,15 +44,15 @@ create an angr script out of the current r2 session
 (createScript name, #!pipe python2.7 /pathToFile/createScript.py $0)
 ```
 
-call a function and set the return value (currently in development mode)
+call a function and specifiy the return value (currently in development mode)
 ```sh
 (callFunction retval, #!pipe python2.7 /pathToFile/callFunction.py $0)
 ```
 
 ## usage
 
-The dynamic mode will print the conrectized symbolic memory if it found a path, 
-the static mode will open an IPython shell in r2 and you will have to concrete the memory
+The dynamic mode will print the concretized symbolic memory if it found a path, 
+the static mode will open an IPython shell in r2 and you will have to concretize the memory
 by yourself.
 
 In r2 just create the flags with the name: r4ge.start (only needed in static mode), r4ge.find,
