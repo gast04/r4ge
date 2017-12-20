@@ -263,3 +263,42 @@ def parseComparison(comp_raw):
 '''
 def printExecTime(t, pg):
     print ("{} {:02d} {:02d}, status: {}".format( int(t/60/60), int(t/60)%60, int(t%60), pg))
+
+
+'''
+    check if r4ge is in debug mode, 
+    if the r4ge.debug variable is set
+'''
+def isR4geVerbose(r2proj):
+    # check if the variable is available
+    variable = r2proj.cmd("$ ~r4ge.verbose")
+    if len(variable) != 13: # $r4ge.verbose
+        return False
+
+    # read value 
+    value = r2proj.cmd("{}?".format(variable))
+    if value.lower() == "true":
+        return True
+    return False
+
+
+'''
+    check if we should use stdout comparisson
+'''
+def getStdoutCheck(r2proj):
+    # check if the variable is available
+    checkstdout = r2proj.cmd("$ ~r4ge.checkstdout")
+    if len(checkstdout) != 17: # $r4ge.checkstdout
+        return None
+
+    # read to check value 
+    tocheck = r2proj.cmd("{}?".format(checkstdout))
+    return tocheck
+
+
+'''
+    check userinput
+'''
+def checkUserPrompt(message):
+    answer = raw_input("{} (y/n)?".format(message))
+    return answer == "y"

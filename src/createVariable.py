@@ -85,16 +85,20 @@ if r2proj == None:
 isX86 = isArchitectureX86(r2proj)
 
 # check first parameter if assert or hook
-varname = "hook"
-isHook = True
+isHook = False
 isSymb = False
-if sys.argv[1] == "assert":
-    isHook = False
-    varname = "assert"
-elif sys.argv[1] == "symb":
-    varname = "symb"
-    isHook = False
+isStdout = False
+isAssert = False
+varname = sys.argv[1]
+
+if varname == "assert":
+    isAssert = True
+elif varname == "symb":
     isSymb = True
+elif varname == "hook":
+    isHook = True
+elif varname == "checkstdout":
+    isStdout = True
 
 # get paramters
 address = sys.argv[2]
@@ -105,18 +109,25 @@ if isHook:
 elif isSymb:
     size = sys.argv[3]    # bitvector length in bytes
     comment = sys.argv[4]
-else:
+elif isAssert:
     instructions = sys.argv[3]
     comment = sys.argv[4]
-
 
 # next variables -> count+1
 if isHook:
     count = len(getHooks(r2proj))
 elif isSymb:
     count = len(getSymbolicMemoryRegions(r2proj))
-else:
+elif isAssert:
     count = len(getAsserts(r2proj))
+
+
+# since checkstdout is a special case check it extra
+if isStdout:
+    # address contains the find target (not optimal, but works...)
+    r2proj.cmd("$r4ge.{0}='{1}'".format( varname, address ))
+    print("set find target to the string: '{}'".format(address))
+    exit(0)
 
 # s as shortcut for current seek
 if address is "s":

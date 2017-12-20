@@ -13,19 +13,29 @@ if r2proj == None:
     print colored("only callable inside a r2-instance!", "red", attrs=["bold"])
     exit(0)
 
+
+# check if we use stdout checking
+tocheck = getStdoutCheck(r2proj)
+use_stdout = False if tocheck is None else True
+
+# retrieve r4ge verbose mode
+VERBOSE_MODE = isR4geVerbose(r2proj)
+if VERBOSE_MODE:
+    print("started in VERBOSE mode")
+
 # check if we in a debug session, use dynamic or static mode
 inDebug = inDebugSession(r2proj)
 if inDebug:
-    print colored("start r4ge in DYNAMIC mode...", "blue", attrs=["bold"])
+    print colored("start r4ge in DYNAMIC mode...{}".format("(STDOUT checking mode)" if use_stdout else ""), "blue", attrs=["bold"])
 else:
-    print colored("start r4ge in STATIC mode...", "blue", attrs=["bold"])
+    print colored("start r4ge in STATIC mode...{}".format("(STDOUT checking mode)" if use_stdout else ""), "blue", attrs=["bold"])
 
 # get flag offsets
 find_offset, avoid_offsets, start_offset = getOffsets(r2proj)
-if ( find_offset == 0 ):
+if ( find_offset == 0 and use_stdout == False ):
     print colored("no find flag found... stop execution", "red", attrs=["bold"])
     exit(0)
-if ( inDebug == False and start_offset == 0):
+if ( inDebug == False and start_offset == 0 ):
     print colored("no start flag found, this is necessary for using the static mode! \nstop execution", "red", attrs=["bold"])
     exit(0)
 
@@ -80,7 +90,7 @@ else:
 
 # set up hooks for symbolic execution
 hook_variables = getHooks( r2proj )
-if len(hook_variables) != 0:
+if len(hook_variables):
     for hook in hook_variables:
         # 0=address, 1=patch_length, 2=instructions
         angrproj.hook(hook[0], make_hook(hook[2]), length=hook[1])
@@ -94,12 +104,15 @@ if len(assert_variables):
         print colored("setup Assert: {}, addr: {}, compare: {}".format( ass[2], hex(ass[0]), ass[1] ), "green")
 
 # start the symbolic execution
-print colored("start symbolic execution, find:{}, avoid:{}".format(hex(find_offset), [hex(x) for x in avoid_offsets]), "blue", attrs=["bold"])
+if use_stdout:
+    print colored("start symbolic execution, find:'{}', avoid:{}".format(tocheck, [hex(x) for x in avoid_offsets]), "blue", attrs=["bold"])
+else:
+  print colored("start symbolic execution, find:{}, avoid:{}".format(hex(find_offset), [hex(x) for x in avoid_offsets]), "blue", attrs=["bold"])
+  # convert find_offsets to basic block address
+  find_offset = getBasicBlockAddr(angrproj, find_offset)
+
 pg = angrproj.factory.simgr(start_state, threads=10)
 
-
-# convert find_offsets to basic block address
-find_offset = getBasicBlockAddr(angrproj, find_offset)
 
 start_with_threads = False # in testing mode!!
 if start_with_threads:
@@ -131,11 +144,13 @@ if start_with_threads:
 else:
     # normal start without information during exploration
     # killing exploration with ctrl+c is possible
-    pg.explore(find=getFindFunction(pg, find_offset, isX86), avoid=avoid_offsets)
+    if use_stdout:
+        pg.explore(find=lambda path: tocheck in path.state.posix.dumps(1), avoid=avoid_offsets)
+    else:
+        pg.explore(find=getFindFunction(pg, find_offset, isX86), avoid=avoid_offsets)
 
 
 print "\nPathGroup Results:", pg
-
 
 state_found = None
 if len(pg.found) == 0:
@@ -160,25 +175,30 @@ if inDebug:
         #print "dumps(1):",state_found.posix.dumps(1) # maybe also print the posix dumps
 
     # debug to find address, step until r2-command
-    jump_to_find = raw_input("You want to set debugsession to find address (y/n)? ")
-    if jump_to_find == "y":
+    if checkUserPrompt("Do you want to set debugsession to find address"):
 
         print colored("concretize symbolic memory in r2...", "green")
         for symb_memory in symb_memories:
             concretizeSymbolicMemory(r2proj, symb_memory[0], symb_memory[4])
 
-        print "jump to find address"
+        print("jump to find address")
         r2proj.cmd("dsu {0}".format( find_offset ))
 
 else:
-    # static mode: open ipython shell to perform concretization byself
+    # static mode: print stdin and open ipython shell to perform manual concretization 
 
-    print colored('''
-    Script-Variables:
-        proj        ... angr project
-        start_state ... start state
-        pg          ... path_group
-    {}'''.format("    state_found ... result state of exploration\n" if state_found is not None else ""), "green")
+    # print stdin
+    if state_found is not None:
+        print(colored("\nSTDIN of state_found:", "blue", attrs=["bold"]))
+        print(state_found.state.posix.dumps(0).encode('string_escape'))
 
-    # open IPython shell
-    IPython.embed()
+    if checkUserPrompt("Do ou want to start an IPython-Shell"):
+        print colored('''
+        Script-Variables:
+            proj        ... angr project
+            start_state ... start state
+            pg          ... path_group
+        {}'''.format("    state_found ... result state of exploration\n" if state_found is not None else ""), "green")
+
+        # open IPython shell
+        IPython.embed()
