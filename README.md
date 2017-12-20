@@ -28,15 +28,20 @@ the variable)
 create hooks in r2 and patch function calls or other statements (syntax of the instructions: rax=0x4
 or rax=0x4;rbx=0x10)
 ```sh
-(addHook addr instructions bytes comment, #!pipe python2.7 /pathToFile/createVariable.py hook $0 $1
-$2 $3)
+(addHook addr instructions bytes comment, #!pipe python2.7 /pathToFile/createVariable.py hook $0 $1 $2 $3)
 ```
 
 create asserts to check register values during exploration (syntax of the instructions: rax==0x3 or
 rax#=0x3;rax<=0x10) Note: # is used instead of >, cause r2 uses > as pipe operator.
 ```sh
-(addAssert addr assertions comment, #!pipe python2.7 /pathToFile/createVariable.py assert $0
-$1 $2)
+(addAssert addr assertions comment, #!pipe python2.7 /pathToFile/createVariable.py assert $0 $1 $2)
+```
+
+it is also possible to search for a specific string in stdout, just call the makro below. this will
+ignore find flags, but will consider hooks and asserts. (r2 has many special characters so it may not
+be possible to put arbitrary strings in the makro but you can modify the r2-variable by your own)
+```sh
+(checkStdout content,  #!pipe python2.7 /pathToFile/createVariable.py checkstdout $0)
 ```
 
 create an angr script out of the current r2 session
