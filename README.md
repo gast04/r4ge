@@ -68,6 +68,7 @@ macro.
 
 ![alt text](/doc/usage_image.png)
 
+short tutorial: https://asciinema.org/a/155856
 
 ## Questions
 do not hesitate to ask or write us an email ;)

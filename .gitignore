@@ -1,3 +1,4 @@
 .git/
 testcases/
+asciinema_recordsi/
 *.pyc
