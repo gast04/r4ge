@@ -6,9 +6,9 @@
 '''
 
 import angr
-from r4geHelper import *
-from memStoreHelper import *
-from registerHandler import *
+from Helper.r4geHelper import *
+from Helper.memStoreHelper import *
+from Helper.registerHandler import *
 from termcolor import colored
 
 
@@ -31,7 +31,7 @@ def compare( state, reg, operator, value):
         if not state.se.evalW(reg) <= value:
             fail = True
     else:
-        print "Assert Fail: unknown operator"
+        print("Assert Fail: unknown operator")
         fail = True
 
     return fail
@@ -104,11 +104,11 @@ def make_assert(comparisons, assert_name):
                 else:
                     fail = compare( state, reg, operator, value)
                     if fail:
-                        print colored("Assert {} failed, {} is {}".format(assert_name, comparison[1],
-                            hex(state.se.evalW(reg))), "red", attrs=["bold"])
+                        print(colored("Assert {} failed, {} is {}".format(assert_name, comparison[1],
+                            hex(state.se.evalW(reg))), "red", attrs=["bold"]))
                         state.assert_failed = True  # create custom assert failed flag
             else:
-                print "assert for memory not implemented"
+                print("assert for memory not implemented")
                 pass
 
     return hook

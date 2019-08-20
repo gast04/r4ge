@@ -78,7 +78,7 @@ def checkAssertComparison(comparison):
 
 r2proj = createR2Pipe()
 if r2proj == None:
-    print colored("only callable inside a r2-instance!", "red", attrs=["bold"])
+    print(colored("only callable inside a r2-instance!", "red", attrs=["bold"]))
     exit(0)
 
 # get the architecture type x86 or x64
@@ -142,7 +142,7 @@ if isHook:
     if checkHookInstructions(instructions):
         r2proj.cmd("${0}='{1};{2};{3};{4}'".format( new_varname, hex(address), patch_size, instructions, comment ))
     else:
-        print colored("Invalid Hook-Instructions Syntax!", "red", attrs=["bold"])
+        print(colored("Invalid Hook-Instructions Syntax!", "red", attrs=["bold"]))
         exit(0)
 elif isSymb:
     r2proj.cmd("${0}='{1};{2};{3}'".format( new_varname, hex(address), size, comment ))
@@ -150,7 +150,7 @@ else:
     if checkAssertComparison(instructions):
         r2proj.cmd("${0}='{1};{2};{3}'".format( new_varname, hex(address), instructions, comment ))
     else:
-        print colored("Invalid Assert-Comparison Syntax!", "red", attrs=["bold"])
+        print(colored("Invalid Assert-Comparison Syntax!", "red", attrs=["bold"]))
         exit(0)
 
 
@@ -159,6 +159,6 @@ r2proj.cmd("CCu {0}:{1} @ {2}".format(varname.title(), comment, address))
 
 # print userinformation
 if isSymb:
-    print "marked memory at {0} as symbolic...".format(hex(address))
+    print("marked memory at {0} as symbolic...".format(hex(address)))
 else:
-    print "created {0}...".format(varname.title())
+    print("created {0}...".format(varname.title()))

@@ -10,7 +10,7 @@ def createR2Pipe():
         r2proj.cmd("a") # send a blind command
         return r2proj
     except:
-        print "Unexpected error:", sys.exc_info()[0]
+        print("Unexpected error:", sys.exc_info()[0])
         return None
 
 
@@ -95,7 +95,7 @@ def getFindFunction(pg, find_target, isX86):
 
         ip = path.state.regs.eip if isX86 else path.state.regs.rip
         if not ip.concrete:
-            print "EIP is Symbolic, maybe Bufferoverflow?.."
+            print("EIP is Symbolic, maybe Bufferoverflow?..")
         else:
             try:
                 if path.state.assert_failed == True:
@@ -143,19 +143,17 @@ def getSymbolicMemoryRegions( r2proj ):
     if len(variables) == 0:
         return []   # no variables
 
-    variables_split = variables.split('\n')
-    symb_vars = []
-    for var in variables_split:
-        symb_vars.append(var[1:]) # entry starts with '$' -> remove it
+    # split and remove empty entries
+    symb_vars = [var for var in variables.split('\n') if var]
 
     # dict with offset and other content
     symb_variables = []
     for var in symb_vars:
-        var_content = r2proj.cmd("${0}?".format(var))
+        var_content = r2proj.cmd("{0}?".format(var))
         var_split = var_content.split(';')
         # 0=offset, 1=size, 2=name
-        #offset = parseValue(var_split[0], isX86)
-        symb_variables.append([ int(var_split[0], 16), int(var_split[1], 10), var_split[2] ])
+        # offset = parseValue(var_split[0], isX86)
+        symb_variables.append([ int(var_split[0], 16), int(var_split[1], 10), var_split[2].strip() ])
 
     return symb_variables
 
@@ -262,7 +260,7 @@ def parseComparison(comp_raw):
     print the execution time in a readable format
 '''
 def printExecTime(t, pg):
-    print ("{} {:02d} {:02d}, status: {}".format( int(t/60/60), int(t/60)%60, int(t%60), pg))
+    print("{} {:02d} {:02d}, status: {}".format( int(t/60/60), int(t/60)%60, int(t%60), pg))
 
 
 '''
@@ -271,15 +269,13 @@ def printExecTime(t, pg):
 '''
 def isR4geVerbose(r2proj):
     # check if the variable is available
-    variable = r2proj.cmd("$ ~r4ge.verbose")
+    variable = r2proj.cmd("$ ~r4ge.verbose").strip()
     if len(variable) != 13: # $r4ge.verbose
         return False
 
     # read value 
-    value = r2proj.cmd("{}?".format(variable))
-    if value.lower() == "true":
-        return True
-    return False
+    value = r2proj.cmd("{}?".format(variable)).strip()
+    return True if value.lower() == "true" else False
 
 
 '''
@@ -300,5 +296,5 @@ def getStdoutCheck(r2proj):
     check userinput
 '''
 def checkUserPrompt(message):
-    answer = raw_input("{} (y/n)?".format(message))
+    answer = input("{} (y/n)?".format(message))
     return answer == "y"

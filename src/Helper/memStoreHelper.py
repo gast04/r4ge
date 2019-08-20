@@ -1,6 +1,5 @@
-
 import r2pipe, angr, claripy
-from r4geHelper import *
+from Helper.r4geHelper import *
 from termcolor import colored
 
 '''
@@ -40,7 +39,7 @@ def setSymbolicMemoryRegions( r2proj, start_state, symb_variables ):
         symb_memory = claripy.BVS(symb_entry[2], symb_entry[1]*8, explicit_name=True)  # *8 because it's a bitvector!
         symb_entry.append(symb_memory)
         start_state.memory.store(symb_entry[0], symb_memory)
-        print colored("symbolic address: {0}, size: {1}".format( hex(symb_entry[0]), symb_entry[1] ), "green")
+        print(colored("symbolic address: {0}, size: {1}".format( hex(symb_entry[0]), symb_entry[1] ), "green"))
 
 
 '''
@@ -92,26 +91,20 @@ def getStackStart( r2proj ):
 '''
 def setupMemoryRegion( r2proj, angr_state, start_addr, size, isX86 ):
 
-    # get raw data from r2
-    if isX86:
-        tmp_cmd = "pxW {0} @ {1}".format(size, start_addr)
-    else:
-        tmp_cmd = "pxQ {0} @ {1}".format(size, start_addr)
-    content_raw = r2proj.cmd( tmp_cmd )
-
-    # store in list first
-    content = []
-    content_split = content_raw.split('\n')
-    for entry in content_split:
-        entry_split = entry.split(' ')
-        value = parseValue(entry_split[1], isX86)
-        content.append( [ int(entry_split[0].strip(),16), value ] )   # [address, value]
+    # get json data from r2
+    cmd =  "pxwj " if isX86 else "pxqj"
+    cmd += "{0} @ {1}".format(size, start_addr)
+    content = r2proj.cmdj( cmd )
 
     # setup memory in angr_state
-    for entry in content:
-        #print "set: {0} <- {1}".format( hex(entry[0]), hex(entry[1]) )
+    offset = 0
+    for memval in content:       
+        #print("set: {0} <- {1}".format( hex(start_addr+offset), hex(memval) ))
+
         # store as little endian or big endian according to architecture
-        angr_state.memory.store(entry[0], entry[1], endness=angr_state.arch.memory_endness)
+        angr_state.memory.store(start_addr+offset, memval, endness=angr_state.arch.memory_endness)
+        offset += 4 if isX86 else 8
+
 
 '''
     concretize symbolic memory in r2
