@@ -1,0 +1,25 @@
+
+enter virtualenv
+
+start r2 in debug mode
+>> r2 -d keyscheduled
+
+debug until offset 0x13da
+the key got stored on the stack, now lets mark it as symbolic
+>> .(markMemorySymbolic <baddr>+0x13da 8 keyinp)
+
+we can see two printf's, one says 'nope' and the otherone 'correct key'
+
+lets mark both with r2 flags by pressing f
+>> r4ge.find
+>> r4ge.avoid
+
+now start r4ge and wait a bit:
+>> .(r4ge)
+
+r4ge output should be:
+>> ... log ...
+>> PathGroup Results: <SimulationManager with 1 found, 6 avoid>
+>> symbolic memory - b'\xef\xcd\xab\x89gE#\x01' - 0x123456789abcdef
+>> Do you want to set debugsession to find address (y/n)?
+
