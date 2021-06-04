@@ -65,7 +65,7 @@ def checkAssertComparison(comparison):
     try:
         # it have to contain one of these
         res = re.search(r"#=|#|==|<=|<", comparison)
-        if res is None:
+        if res == None:
             return False
         # check that registername have 3 charakters
         if comparison.find(res.group(0)) != 3:
@@ -130,7 +130,7 @@ if isStdout:
     exit(0)
 
 # s as shortcut for current seek
-if address is "s":
+if address == "s":
     address = r2proj.cmd("s") # use current seek
 
 # parse address to a correct number
