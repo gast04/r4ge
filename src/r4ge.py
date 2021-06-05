@@ -193,7 +193,7 @@ else:
     # print stdin
     if state_found != None:
         print(colored("\nSTDIN of state_found:", "blue", attrs=["bold"]))
-        print(state_found.state.posix.dumps(0).encode('string_escape'))
+        print(state_found.posix.dumps(0).decode('utf-8', 'ignore'))
 
     if checkUserPrompt("Do ou want to start an IPython-Shell"):
         print(colored('''
