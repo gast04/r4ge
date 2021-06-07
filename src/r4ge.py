@@ -198,7 +198,7 @@ else:
     if checkUserPrompt("Do ou want to start an IPython-Shell"):
         print(colored('''
         Script-Variables:
-            proj        ... angr project
+            angrproj        ... angr project
             start_state ... start state
             pg          ... path_group
         {}'''.format("    state_found ... result state of exploration\n" if state_found is not None else ""), "green"))
