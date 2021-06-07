@@ -1,4 +1,5 @@
-r2pipe==1.4.1
+r2pipe==1.5.3
 termcolor==1.1.0
 IPython==7.3.0
-angr==8.19.7.25
+angr==9.0.7833
+
