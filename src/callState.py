@@ -21,7 +21,7 @@ if r2proj == None:
 isX86 = isArchitectureX86(r2proj)
 
 # get offsets from flags
-find_offset, avoid_offsets, start_offset = getOffsets(r2proj, False)
+find_offset, avoid_offsets, start_offset = getOffsets(r2proj)
 print(colored("start: {}, find:{}, avoid:{}".format(hex(start_offset),
     hex(find_offset), [hex(x) for x in avoid_offsets]), "green"))
 

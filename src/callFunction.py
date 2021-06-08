@@ -15,7 +15,7 @@ isX86 = isArchitectureX86(r2proj)
 print("isX86: {}".format(isX86))
 
 # get Offsets, we only need start_offset for callable
-_, _, start_offset = getOffsets(r2proj, False)
+_, _, start_offset = getOffsets(r2proj)
 
 # get parameters
 expected_result = int(sys.argv[1], 16)
