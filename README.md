@@ -74,8 +74,8 @@ short tutorial: https://asciinema.org/a/155856
 do not hesitate to ask or write us an email ;)
 
 ## Updates
-last update 20.08.2019, more will come :)
-- ported to python3.7 and angr 8.19.7.25
+last update 10.06.2021, more will come :)
+- ported to python3.8 and angr 9.0.7833
 
 ## Example
 
