@@ -65,7 +65,7 @@ def checkAssertComparison(comparison):
     try:
         # it have to contain one of these
         res = re.search(r"#=|#|==|<=|<", comparison)
-        if res == None:
+        if res is None:
             return False
         # check that registername have 3 charakters
         if comparison.find(res.group(0)) != 3:

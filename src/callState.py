@@ -68,7 +68,7 @@ Script-Variables:
     proj        ... angr project
     callstate   ... start state
     pg          ... path_group
-{}'''.format("    state_found ... result state of exploration\n" if state_found == not None else ""), "green"))
+{}'''.format("    state_found ... result state of exploration\n" if state_found is not None else ""), "green"))
 
 # open IPython shell
 IPython.embed()

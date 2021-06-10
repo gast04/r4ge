@@ -15,7 +15,7 @@ if r2proj == None:
 
 # check if we use stdout checking
 tocheck = getStdoutCheck(r2proj)
-use_stdout = False if tocheck == None else True
+use_stdout = False if tocheck is None else True
 
 # retrieve r4ge verbose mode
 VERBOSE_MODE = isR4geVerbose(r2proj)
@@ -191,7 +191,7 @@ else:
     # static mode: print stdin and open ipython shell to perform manual concretization 
 
     # print stdin
-    if state_found != None:
+    if state_found is not None:
         print(colored("\nSTDIN of state_found:", "blue", attrs=["bold"]))
         print(state_found.posix.dumps(0).decode('utf-8', 'ignore'))
 
