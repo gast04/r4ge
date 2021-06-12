@@ -130,7 +130,7 @@ if isStdout:
     exit(0)
 
 # s as shortcut for current seek
-if address is "s":
+if address == "s":
     address = r2proj.cmd("s") # use current seek
 
 # parse address to a correct number
