@@ -198,12 +198,12 @@ else:
     # print stdin
     if state_found is not None:
         print(colored("\nSTDIN of state_found:", "blue", attrs=["bold"]))
-        print(state_found.state.posix.dumps(0).encode('string_escape'))
+        print(state_found.posix.dumps(0).decode('utf-8', 'ignore'))
 
     if checkUserPrompt("Do ou want to start an IPython-Shell"):
         print(colored('''
         Script-Variables:
-            proj        ... angr project
+            angrproj        ... angr project
             start_state ... start state
             pg          ... path_group
         {}'''.format("    state_found ... result state of exploration\n" if state_found is not None else ""), "green"))

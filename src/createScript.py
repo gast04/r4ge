@@ -24,7 +24,7 @@ def setupMemory(r2proj):
     # Stack to JSON
     stack_start = getStackStart( r2proj )
     stack_size = stack_start - esp
-    print colored("copy Stack: {0}-{1}, size: {2}".format( hex(stack_start), hex(esp), stack_size), "green")
+    print(colored("copy Stack: {0}-{1}, size: {2}".format( hex(stack_start), hex(esp), stack_size), "green"))
     stack_json = memoryToJson(r2proj, esp, stack_size, "stack", isX86)
     stack_op = memoryToFile(r2proj, esp, stack_size, "stack", isX86)
 
@@ -34,7 +34,7 @@ def setupMemory(r2proj):
     (top_chunk, brk_start) = checkForHeap( r2proj )
     if top_chunk != 0 and brk_start != 0:
         heap_size = top_chunk - brk_start
-        print colored("copy Heap: {0}-{1}, size: {2}".format( hex(top_chunk), hex(brk_start), heap_size ), "green")
+        print(colored("copy Heap: {0}-{1}, size: {2}".format( hex(top_chunk), hex(brk_start), heap_size ), "green"))
         heap_json = memoryToJson(r2proj, brk_start, heap_size, "heap", isX86)
         heap_op = memoryToFile(r2proj, brk_start, heap_size, "heap", isX86)
 
@@ -67,7 +67,7 @@ def setupMemory(r2proj):
 
 r2proj = createR2Pipe()
 if r2proj == None:
-    print colored("only callable inside a r2-instance!", "red", attrs=["bold"])
+    print(colored("only callable inside a r2-instance!", "red", attrs=["bold"]))
     exit(0)
 
 # check if we in a debug session
@@ -78,7 +78,7 @@ isX86 = isArchitectureX86(r2proj)
 
 # create script file
 script_name = sys.argv[1]
-print colored("creating Script " + script_name + "...", "blue")
+print(colored("creating Script " + script_name + "...", "blue"))
 script_file = open(script_name, 'w')
 
 # get offsets

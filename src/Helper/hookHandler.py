@@ -61,7 +61,7 @@ def make_hook(instructions):
 
     # create the actual hook-function
     def hook(state):
-        #print "hooke called on ip: {0} instr: {1}".format(state.ip, instructions)
+        #print("hooke called on ip: {0} instr: {1}".format(state.ip, instructions))
 
         for key, value in instructions.items():
             key = key.lower() # for safety convert to lower case

@@ -105,9 +105,9 @@ def memoryToJson(r2proj, start, size, name, isX86):
     content_str = ""
     for entry in content_split:
         entry_split = entry.split(' ')
-        #print "value: ", entry_split[1]
+        #print("value: ", entry_split[1])
         value = parseValue( entry_split[1], isX86 )
-        #print "value: ", value
+        #print("value: ", value)
         content_str += '"' + str(int(entry_split[0].strip(),16)) + '":"' + str(value) + '",'
 
     # create json string per hand
@@ -131,7 +131,7 @@ def memoryToFile(r2proj, start, size, name, isX86):
     content_split = content_raw.split('\n')
     for entry in content_split:
         entry_split = entry.split(' ')
-        #print "addr:{} val:{}".format(entry_split[0].strip(), parseValue( entry_split[1], isX86 ))
+        #print("addr:{} val:{}".format(entry_split[0].strip(), parseValue( entry_split[1], isX86 )))
         mem_str += str(parseValue( entry_split[1], isX86 )) + ","
 
     return mem_str[:-1] # remove last comma
@@ -164,7 +164,7 @@ def createHooks( r2proj ):
     def assert_checkEAX(state):
         if state.regs.ecx.concrete:
             if not state.se.any_int(state.regs.ecx) == 0x5:
-                print "Assert checkEAX failed..."
+                print("Assert checkEAX failed...")
         else: # value is symbolic, add constraint
             state.add_constraints(state.regs.eax == 0x5)
 '''
@@ -184,7 +184,7 @@ def createAsserts(r2proj):
             assert_temp += '''
     if state.regs.{1}.concrete:
         if not state.se.any_int(state.regs.{1}) {2} {3}:
-            print "Assert {0} failed..."
+            print("Assert {0} failed...")
     else:
         state.add_constraints(state.regs.{1} {2} {3})
 '''.format(ass[2], comp[1], comp[2], hex(comp[3]))
@@ -203,7 +203,7 @@ def loadMemory( start_state ):
     try:
         mem_file = open("memoryContent.txt", "r")
     except IOError:
-        print "could not find memoryContent.txt..."
+        print("could not find memoryContent.txt...")
         exit(0)
 
     memory_json = json.load(mem_file)   # loads file as json object
@@ -228,7 +228,7 @@ def loadMemory( start_state ):
     try:
         mem_file = open("memoryContentOP.txt")
     except IOError:
-        print "could not find memoryContent.txt..."
+        print("could not find memoryContent.txt...")
         exit(0)
 
     mem_lines = mem_file.readlines()
@@ -279,13 +279,13 @@ def printSolution( r2proj ):
 # print soltion if we found a path
 if len(pg.found) > 0:
     state_found = pg.found[0].state
-    print "found the target!"
+    print("found the target!")
     '''
 
     for variable in symb_variables:
         tmp = '''
     concrete_memory = state_found.memory.load({0}, {1}) # {2}
-    print state_found.se.any_str(concrete_memory)'''.format(hex(variable[0]), variable[1], variable[2])
+    print(state_found.se.any_str(concrete_memory))'''.format(hex(variable[0]), variable[1], variable[2])
         content += tmp
 
     if len(symb_variables) == 0: # -> check for static mode
@@ -293,8 +293,8 @@ if len(pg.found) > 0:
 
     content += '''
 else:
-    print "start IPython shell"
-    print "Variables: state_found, start_state, pg, proj"
+    print("start IPython shell")
+    print("Variables: state_found, start_state, pg, proj")
     IPython.embed()
     '''
 

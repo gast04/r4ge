@@ -33,7 +33,7 @@ def getBinaryName(r2proj):
 '''
 def parseAddress(r2proj, address):
     # s as shortcut for current seek
-    if address is "s":
+    if address == "s":
         address = r2proj.cmd("s") # use current seek
 
     # parse address to a correct number
@@ -100,7 +100,7 @@ def getFindFunction(pg, find_target, isX86):
             try:
                 if path.state.assert_failed == True:
                     path.errored = True # set errored flag in path, to avoid further exploration
-                    #print "add path to errored list"
+                    #print("add path to errored list")
             except AttributeError:
                 pass # happens because assert_failed is custom generated
 
