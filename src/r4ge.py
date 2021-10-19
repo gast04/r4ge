@@ -1,7 +1,7 @@
 '''
     main plugin file to perform symbolic execution
 '''
-import r2pipe, angr, IPython, threading, time, logging
+import r2pipe, angr, IPython, threading, time, logging, binascii
 from termcolor import colored
 from Helper.memStoreHelper import *
 from Helper.hookHandler import *
@@ -66,8 +66,10 @@ if inDebug:
         print(colored("no symbolic memory found... stop execution", "red", attrs=["bold"]))
         exit(0)
 
+    
+
     # copy registers to blank(start) state
-    current_stack_pointer = copyRegisterValues( r2proj, start_state, isX86)
+    current_stack_pointer = copyRegisterValues(r2proj, start_state, isX86)
 
     # copy Stack
     stack_start = getStackStart( r2proj )
@@ -174,8 +176,11 @@ if inDebug:
     for symb_memory in symb_memories:        
         mem = state_found.memory.load(symb_memory[0], symb_memory[1])
         symb_memory.append( state_found.solver.eval_upto(mem, 1, cast_to=bytes) )
-        print(colored("symbolic memory - {}".format(symb_memory[4][0]), "green"))
+        print(colored("symbolic memory - {} - {}".format(symb_memory[4][0], hex(int(binascii.hexlify(symb_memory[4][0][::-1]),16))), "green"))
         #print "dumps(1):",state_found.posix.dumps(1) # maybe also print the posix dumps
+
+    # open IPython shell
+    IPython.embed()
 
     # debug to find address, step until r2-command
     if checkUserPrompt("Do you want to set debugsession to find address"):

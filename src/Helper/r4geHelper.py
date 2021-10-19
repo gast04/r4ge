@@ -118,7 +118,7 @@ def getFindFunction(pg, find_target, isX86):
     the binary in angr which is slow
 '''
 def isPIE(r2proj):
-    bininfo = r2proj.cmdj("ij~pic")
+    bininfo = r2proj.cmdj("ij")
     if bininfo['bin']['pic']:
         bin_addr = r2proj.cmdj("ej")['bin.baddr']
         return True, bin_addr

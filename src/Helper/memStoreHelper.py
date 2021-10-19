@@ -37,8 +37,16 @@ def getOffsets( r2proj, inHex=False):
 def setSymbolicMemoryRegions( r2proj, start_state, symb_variables ):
     for symb_entry in symb_variables:
         symb_memory = claripy.BVS(symb_entry[2], symb_entry[1]*8, explicit_name=True)  # *8 because it's a bitvector!
+
         symb_entry.append(symb_memory)
         start_state.memory.store(symb_entry[0], symb_memory)
+
+        # what if marked input has not exact length
+        #for byte in symb_memory.chop(8):
+        #    #start_state.add_constraints(claripy.Or(byte >= ' ')#, byte == 0x00)    ) 
+        #    start_state.add_constraints(byte >= ' ')#, byte == 0x00)    ) # 0x20
+        #    start_state.add_constraints(byte <= '~') # 0x7e
+
         print(colored("symbolic address: {0}, size: {1}".format( hex(symb_entry[0]), symb_entry[1] ), "green"))
 
 
