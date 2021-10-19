@@ -1,4 +1,5 @@
-import r2pipe, angr, claripy
+import claripy
+import binascii
 from Helper.r4geHelper import *
 from termcolor import colored
 
@@ -8,13 +9,13 @@ from termcolor import colored
 
     parameter "inHex": return a list with hex strings -> remove
 '''
-def getOffsets( r2proj, inHex=False):
+def getOffsets( rzproj, inHex=False):
     find_offset = 0
     start_offset = 0
     avoid_offsets = []
 
     # get all flags as JSON
-    flags = r2proj.cmdj("fj")
+    flags = rzproj.cmdj("fj")
 
     for flag in flags:
         if flag['name'].startswith("r4ge.find"):
@@ -34,7 +35,7 @@ def getOffsets( r2proj, inHex=False):
     set symbolic memory in {start_state}, symbolic memory is stored
     in r2 variables
 '''
-def setSymbolicMemoryRegions( r2proj, start_state, symb_variables ):
+def setSymbolicMemoryRegions( rzproj, start_state, symb_variables ):
     for symb_entry in symb_variables:
         symb_memory = claripy.BVS(symb_entry[2], symb_entry[1]*8, explicit_name=True)  # *8 because it's a bitvector!
 
@@ -54,8 +55,8 @@ def setSymbolicMemoryRegions( r2proj, start_state, symb_variables ):
     read the brk_start address and the top_chunk address
     from the heap memory map
 '''
-def checkForHeap( r2proj ):
-    heap_sizes = r2proj.cmd("dmh")
+def checkForHeap( rzproj ):
+    heap_sizes = rzproj.cmd("dmh")
 
     if ( len(heap_sizes) != 0 ):
         # there is  heap to copy
@@ -80,8 +81,8 @@ def checkForHeap( r2proj ):
 '''
     read the start of the stack from the memory maps
 '''
-def getStackStart( r2proj ):
-    memory_map = r2proj.cmdj("dmj")
+def getStackStart( rzproj ):
+    memory_map = rzproj.cmdj("dmj")
     stack_map = None
     for memory_entry in memory_map:
         if "stack" in memory_entry['name']:
@@ -97,12 +98,12 @@ def getStackStart( r2proj ):
     sets up/copy the memory starting from {start_addr}
     counting upwards until {size}
 '''
-def setupMemoryRegion( r2proj, angr_state, start_addr, size, isX86 ):
+def setupMemoryRegion( rzproj, angr_state, start_addr, size, isX86 ):
 
     # get json data from r2
     cmd =  "pxwj " if isX86 else "pxqj"
     cmd += "{0} @ {1}".format(size, start_addr)
-    content = r2proj.cmdj( cmd )
+    content = rzproj.cmdj( cmd )
 
     # setup memory in angr_state
     offset = 0
@@ -118,14 +119,14 @@ def setupMemoryRegion( r2proj, angr_state, start_addr, size, isX86 ):
     concretize symbolic memory in r2
     write {value_str} to {symb_addr}
 '''
-def concretizeSymbolicMemory(r2proj, symb_addr, value_str):
+def concretizeSymbolicMemory(rzproj, symb_addr, value_str):
 
     # save seek and seek to symbolic address
-    save_seek = r2proj.cmd("s")
-    r2proj.cmd("s {}".format(symb_addr))
+    save_seek = rzproj.cmd("s")
+    rzproj.cmd("s {}".format(symb_addr))
 
     # write hex data
-    r2proj.cmd("wx {}".format(value_str.encode('hex')))
+    rzproj.cmd("wx {}".format(binascii.hexlify(value_str[0]).decode('utf-8')))
 
     # restore seek
-    r2proj.cmd("s {}".format(save_seek))
+    rzproj.cmd("s {}".format(save_seek))

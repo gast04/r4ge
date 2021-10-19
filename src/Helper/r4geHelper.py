@@ -1,14 +1,13 @@
-
-import sys, r2pipe
+import sys, rzpipe
 
 '''
     create connection to the r2 instance
 '''
-def createR2Pipe():
+def createRzPipe():
     try:
-        r2proj = r2pipe.open()
-        r2proj.cmd("a") # send a blind command
-        return r2proj
+        rzproj = rzpipe.open()
+        rzproj.cmd("a") # send a blind command
+        return rzproj
     except:
         print("Unexpected error:", sys.exc_info()[0])
         return None
@@ -17,35 +16,35 @@ def createR2Pipe():
 '''
     check if binary is x86
 '''
-def isArchitectureX86(r2proj):
-    return (str(r2proj.cmdj("ij")['bin']['class']) == "ELF32")
+def isArchitectureX86(rzproj):
+    return (str(rzproj.cmdj("ij")['bin']['class']) == "ELF32")
 
 
 '''
     returns the binaryname out of the r2 instance
 '''
-def getBinaryName(r2proj):
-    return str(r2proj.cmdj("ij")['core']['file'])
+def getBinaryName(rzproj):
+    return str(rzproj.cmdj("ij")['core']['file'])
 
 
 '''
     parse current seek address
 '''
-def parseAddress(r2proj, address):
+def parseAddress(rzproj, address):
     # s as shortcut for current seek
     if address == "s":
-        address = r2proj.cmd("s") # use current seek
+        address = rzproj.cmd("s") # use current seek
 
     # parse address to a correct number
-    return parseValue( address, isArchitectureX86(r2proj) )
+    return parseValue( address, isArchitectureX86(rzproj) )
 
 
 '''
     only debug sessions have the exe field
 '''
-def inDebugSession(r2proj):
+def inDebugSession(rzproj):
     try:
-        r2proj.cmdj("dij")["exe"]
+        rzproj.cmdj("dij")["exe"]
         return True
     except Exception as e:
         return False
@@ -117,10 +116,10 @@ def getFindFunction(pg, find_target, isX86):
     use r2 check so that we do not have to load
     the binary in angr which is slow
 '''
-def isPIE(r2proj):
-    bininfo = r2proj.cmdj("ij")
-    if bininfo['bin']['pic']:
-        bin_addr = r2proj.cmdj("ej")['bin.baddr']
+def isPIE(rzproj):
+    bininfo = rzproj.cmdj("ij")
+    if bininfo['bin']['PIE']:
+        bin_addr = rzproj.cmdj("ij")['bin']['baddr']
         return True, bin_addr
     else:
         return False, 0
@@ -136,10 +135,10 @@ def isPIE(r2proj):
     delte variables with: $[varname]=
     ( the ''='  stands for deleting )
 '''
-def getSymbolicMemoryRegions( r2proj ):
+def getSymbolicMemoryRegions( rzproj ):
 
     # get all variables from r2 and store in a list
-    variables = r2proj.cmd("$ ~r4ge.symb")
+    variables = rzproj.cmd("$ ~r4ge.symb")
     if len(variables) == 0:
         return []   # no variables
 
@@ -149,7 +148,7 @@ def getSymbolicMemoryRegions( r2proj ):
     # dict with offset and other content
     symb_variables = []
     for var in symb_vars:
-        var_content = r2proj.cmd("{0}?".format(var))
+        var_content = rzproj.cmd("{0}?".format(var))
         var_split = var_content.split(';')
         # 0=offset, 1=size, 2=name
         # offset = parseValue(var_split[0], isX86)
@@ -165,17 +164,17 @@ def getSymbolicMemoryRegions( r2proj ):
     0x08048477;eax<=0x5;checkEAX
     0x08048477;[0x08048477]<=0x5;checkEAX TODO
 '''
-def getAsserts( r2proj ):
+def getAsserts( rzproj ):
 
     # get all variables from r2 and store in a list
-    variables = r2proj.cmd("$ ~r4ge.assert")
+    variables = rzproj.cmd("$ ~r4ge.assert")
     if len(variables) == 0:
         return []   # no variables
 
     assert_variables = []
     asserts_raw = variables.split('\n')
     for var in asserts_raw:
-        content = r2proj.cmd("{0}?".format(var))
+        content = rzproj.cmd("{0}?".format(var))
         content_split = content.split(';') # 0=offset, 1=comparison, 2=comment
 
         assert_var = [] # save instruction as list: 0=isReg, 1=reg|memAddr, 2=operator, 3=value
@@ -198,10 +197,10 @@ def getAsserts( r2proj ):
     example hook content:
     0x08048477;5;eax=0x5;patchStrlen
 '''
-def getHooks( r2proj ):
+def getHooks( rzproj ):
 
     # get all variables from r2 and store in a list
-    variables = r2proj.cmd("$ ~r4ge.hook")
+    variables = rzproj.cmd("$ ~r4ge.hook")
     if len(variables) == 0:
         return []   # no variables
 
@@ -209,7 +208,7 @@ def getHooks( r2proj ):
     hook_variables = []
     hooks_raw = variables.split('\n')
     for var in hooks_raw:
-        content = r2proj.cmd("{0}?".format(var))
+        content = rzproj.cmd("{0}?".format(var))
         var_split = content.split(';')
         # 0=offset, 1=patch_size, 2=instructions, 3=comment
 
@@ -267,28 +266,28 @@ def printExecTime(t, pg):
     check if r4ge is in debug mode, 
     if the r4ge.debug variable is set
 '''
-def isR4geVerbose(r2proj):
+def isR4geVerbose(rzproj):
     # check if the variable is available
-    variable = r2proj.cmd("$ ~r4ge.verbose").strip()
+    variable = rzproj.cmd("$ ~r4ge.verbose").strip()
     if len(variable) != 13: # $r4ge.verbose
         return False
 
     # read value 
-    value = r2proj.cmd("{}?".format(variable)).strip()
+    value = rzproj.cmd("{}?".format(variable)).strip()
     return True if value.lower() == "true" else False
 
 
 '''
     check if we should use stdout comparisson
 '''
-def getStdoutCheck(r2proj):
+def getStdoutCheck(rzproj):
     # check if the variable is available
-    checkstdout = r2proj.cmd("$ ~r4ge.checkstdout")
+    checkstdout = rzproj.cmd("$ ~r4ge.checkstdout")
     if len(checkstdout) != 17: # $r4ge.checkstdout
         return None
 
     # read to check value 
-    tocheck = r2proj.cmd("{}?".format(checkstdout))
+    tocheck = rzproj.cmd("{}?".format(checkstdout))
     return tocheck
 
 

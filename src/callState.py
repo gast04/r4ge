@@ -14,26 +14,26 @@ from Helper.memStoreHelper import *
 from Helper.hookHandler import *
 
 # create r2 connection
-r2proj = createR2Pipe()
-if r2proj == None:
+rzproj = createR2Pipe()
+if rzproj == None:
     print(colored("only callable inside a r2-instance!", "red", attrs=["bold"]))
     exit(0)
-isX86 = isArchitectureX86(r2proj)
+isX86 = isArchitectureX86(rzproj)
 
 # get offsets from flags
-find_offset, avoid_offsets, start_offset = getOffsets(r2proj)
+find_offset, avoid_offsets, start_offset = getOffsets(rzproj)
 print(colored("start: {}, find:{}, avoid:{}".format(hex(start_offset),
     hex(find_offset), [hex(x) for x in avoid_offsets]), "green"))
 
 # get binary name and create angr project
-binaryname = getBinaryName(r2proj)
+binaryname = getBinaryName(rzproj)
 proj = angr.Project(binaryname, load_options={"auto_load_libs":False})
 
 # create call function
 callstate = proj.factory.call_state(start_offset)
 
 # set up hooks for symbolic execution
-hook_variables = getHooks( r2proj )
+hook_variables = getHooks( rzproj )
 if len(hook_variables) != 0:
     for hook in hook_variables:
         # 0=address, 1=patch_length, 2=instructions
@@ -41,7 +41,7 @@ if len(hook_variables) != 0:
         print(colored("setup Hook: {}, addr: {}, patchlength: {}, instr: {}".format( hook[3], hex(hook[0]), hook[1], hook[2] ), "green"))
 
 # get all asserts
-assert_variables = getAsserts( r2proj ) # 0=offset, 1=comparisons, 2=comment
+assert_variables = getAsserts( rzproj ) # 0=offset, 1=comparisons, 2=comment
 if len(assert_variables):
     for ass in assert_variables:
         proj.hook(ass[0], make_assert(ass[1], ass[2]), length=0)

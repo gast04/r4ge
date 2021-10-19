@@ -30,9 +30,9 @@ start_state = proj.factory.call_state(''' + hex(start_offset) + ''', remove_opti
     return header
 
 
-def createScriptRegistersX86( r2proj ):
+def createScriptRegistersX86( rzproj ):
     # copy registers to blank(start) state
-    registers = r2proj.cmdj("drj")
+    registers = rzproj.cmdj("drrj") # TODO: FIXME
 
     regs = '''
 # set register values
@@ -50,8 +50,8 @@ start_state.regs.edx={8}
 
     return regs, registers['esp']
 
-def createScriptRegistersX64( r2proj ):
-        registers = r2proj.cmdj("drj")
+def createScriptRegistersX64( rzproj ):
+        registers = rzproj.cmdj("drj")
 
         regs = '''
 # set register values
@@ -80,10 +80,10 @@ start_state.regs.r15={}
 
         return regs, registers['rsp']
 
-def createSymbolicVariables(r2proj):
+def createSymbolicVariables(rzproj):
 
     # 0=offset, 1=size, 2=name
-    symb_variables = getSymbolicMemoryRegions( r2proj )
+    symb_variables = getSymbolicMemoryRegions( rzproj )
 
     symbolic_memory = "\n# set up symbolic memory\n"
     for variable in symb_variables:
@@ -92,14 +92,14 @@ def createSymbolicVariables(r2proj):
 
 
 #format: "name" :{"address": "values"}
-def memoryToJson(r2proj, start, size, name, isX86):
+def memoryToJson(rzproj, start, size, name, isX86):
 
     # get raw data
     if isX86:
         tmp_cmd = "pxW {0} @ {1}".format(size, start)
     else:
         tmp_cmd = "pxQ {0} @ {1}".format(size, start)
-    content_raw = r2proj.cmd(tmp_cmd)
+    content_raw = rzproj.cmd(tmp_cmd)
 
     content_split = content_raw.split('\n')
     content_str = ""
@@ -117,13 +117,13 @@ def memoryToJson(r2proj, start, size, name, isX86):
 
 
 # optimized version of the json function
-def memoryToFile(r2proj, start, size, name, isX86):
+def memoryToFile(rzproj, start, size, name, isX86):
     # get raw data
     if isX86:
         tmp_cmd = "pxW {0} @ {1}".format(size, start)
     else:
         tmp_cmd = "pxQ {0} @ {1}".format(size, start)
-    content_raw = r2proj.cmd(tmp_cmd)
+    content_raw = rzproj.cmd(tmp_cmd)
 
     # write file header
     # name, isX86, start, size
@@ -138,8 +138,8 @@ def memoryToFile(r2proj, start, size, name, isX86):
 
 
 # name of the created hook function is hook_[name]
-def createHooks( r2proj ):
-    hooks = getHooks(r2proj)
+def createHooks( rzproj ):
+    hooks = getHooks(rzproj)
     # 0=offset, 1=patch_size, 2=instructions, 3=comment
 
     # create a python function for each hook
@@ -168,8 +168,8 @@ def createHooks( r2proj ):
         else: # value is symbolic, add constraint
             state.add_constraints(state.regs.eax == 0x5)
 '''
-def createAsserts(r2proj):
-    asserts = getAsserts(r2proj)
+def createAsserts(rzproj):
+    asserts = getAsserts(rzproj)
 
     assert_functions = ""
     assert_sets = "\n# setup assert hooks in project\n"
@@ -270,10 +270,10 @@ pg.explore(find={0}, avoid=[{1}])
     or open an IPython shell if no path is found
     -> usefull for creating a script in static mode..
 '''
-def printSolution( r2proj ):
+def printSolution( rzproj ):
 
     # 0=offset, 1=size, 2=name
-    symb_variables = getSymbolicMemoryRegions( r2proj )
+    symb_variables = getSymbolicMemoryRegions( rzproj )
 
     content = '''
 # print soltion if we found a path

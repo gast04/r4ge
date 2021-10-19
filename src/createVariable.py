@@ -3,7 +3,7 @@
     (every number should be in hex, values and registers)
 
     Hooks:
-        hooks are usefull to "patch" functions call, we can create a r2-variable
+        hooks are usefull to "patch" functions call, we can create a rz-variable
         which will be later translated to a angr-hook function
 
         hook naming convention: r4ge.hookx
@@ -13,7 +13,7 @@
 
     Asserts:
         assert are usefull to compare memory or registers at "runtime" during the
-        symbolic execution, r2-variables are created which will be translated to
+        symbolic execution, rz-variables are created which will be translated to
         angr hooks with a mem check.
 
         assert naming convention: r4ge.assertx
@@ -22,7 +22,7 @@
         .(addAssert 0x08048477 '[0x08048477]<=0x5' checkEAX) TODO
         # address, instructions, length, comment
 
-        (we need a # cause > is always expressed as the pipe operator in r2)
+        (we need a # cause > is always expressed as the pipe operator in rz)
 
     Smbolic Memory:
         main part of the symbolic execution, these variables mark the memory
@@ -34,10 +34,10 @@
 
     Note:
         createVariable.py should not import angr because this will make
-        it slow and it is not needed for creating variables in r2
+        it slow and it is not needed for creating variables in rz
 '''
 
-import r2pipe, sys, re
+import sys, re
 from termcolor import colored
 from Helper.r4geHelper import *
 
@@ -76,13 +76,13 @@ def checkAssertComparison(comparison):
         return False
 
 
-r2proj = createR2Pipe()
-if r2proj == None:
-    print(colored("only callable inside a r2-instance!", "red", attrs=["bold"]))
+rzproj = createRzPipe()
+if rzproj == None:
+    print(colored("only callable inside a rz-instance!", "red", attrs=["bold"]))
     exit(0)
 
 # get the architecture type x86 or x64
-isX86 = isArchitectureX86(r2proj)
+isX86 = isArchitectureX86(rzproj)
 
 # check first parameter if assert or hook
 isHook = False
@@ -115,47 +115,47 @@ elif isAssert:
 
 # next variables -> count+1
 if isHook:
-    count = len(getHooks(r2proj))
+    count = len(getHooks(rzproj))
 elif isSymb:
-    count = len(getSymbolicMemoryRegions(r2proj))
+    count = len(getSymbolicMemoryRegions(rzproj))
 elif isAssert:
-    count = len(getAsserts(r2proj))
+    count = len(getAsserts(rzproj))
 
 
 # since checkstdout is a special case check it extra
 if isStdout:
     # address contains the find target (not optimal, but works...)
-    r2proj.cmd("$r4ge.{0}='{1}'".format( varname, address ))
+    rzproj.cmd("$r4ge.{0}='{1}'".format( varname, address ))
     print("set find target to the string: '{}'".format(address))
     exit(0)
 
 # s as shortcut for current seek
 if address == "s":
-    address = r2proj.cmd("s") # use current seek
+    address = rzproj.cmd("s") # use current seek
 
 # parse address to a correct number
 address = parseValue( address, isX86 )
 
-# create r2-variable
+# create rz-variable
 new_varname = "r4ge.{0}{1}".format(varname, count+1)
 if isHook:
     if checkHookInstructions(instructions):
-        r2proj.cmd("${0}='{1};{2};{3};{4}'".format( new_varname, hex(address), patch_size, instructions, comment ))
+        rzproj.cmd("${0}='{1};{2};{3};{4}'".format( new_varname, hex(address), patch_size, instructions, comment ))
     else:
         print(colored("Invalid Hook-Instructions Syntax!", "red", attrs=["bold"]))
         exit(0)
 elif isSymb:
-    r2proj.cmd("${0}='{1};{2};{3}'".format( new_varname, hex(address), size, comment ))
+    rzproj.cmd("${0}='{1};{2};{3}'".format( new_varname, hex(address), size, comment ))
 else:
     if checkAssertComparison(instructions):
-        r2proj.cmd("${0}='{1};{2};{3}'".format( new_varname, hex(address), instructions, comment ))
+        rzproj.cmd("${0}='{1};{2};{3}'".format( new_varname, hex(address), instructions, comment ))
     else:
         print(colored("Invalid Assert-Comparison Syntax!", "red", attrs=["bold"]))
         exit(0)
 
 
-# create r2 comment on address
-r2proj.cmd("CCu {0}:{1} @ {2}".format(varname.title(), comment, address))
+# create rz comment on address
+rzproj.cmd("CCu {0}:{1} @ {2}".format(varname.title(), comment, address))
 
 # print userinformation
 if isSymb:

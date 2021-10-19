@@ -1,37 +1,37 @@
 '''
     main plugin file to perform symbolic execution
 '''
-import r2pipe, angr, IPython, threading, time, logging, binascii
+import angr, IPython, threading, time, logging, binascii
 from termcolor import colored
 from Helper.memStoreHelper import *
 from Helper.hookHandler import *
 from Helper.r4geHelper import *
 
-# connect to r2
-r2proj = createR2Pipe()
-if r2proj == None:
-    print(colored("only callable inside a r2-instance!", "red", attrs=["bold"]))
+# connect to rizin
+rzproj = createRzPipe()
+if rzproj == None:
+    print(colored("only callable inside a rz-instance!", "red", attrs=["bold"]))
     exit(0)
 
 # check if we use stdout checking
-tocheck = getStdoutCheck(r2proj)
+tocheck = getStdoutCheck(rzproj)
 use_stdout = False if tocheck is None else True
 
 # retrieve r4ge verbose mode
-VERBOSE_MODE = isR4geVerbose(r2proj)
+VERBOSE_MODE = isR4geVerbose(rzproj)
 if VERBOSE_MODE:
     print("started in VERBOSE mode")
     logging.getLogger('angr.sim_manager').setLevel('DEBUG')
 
 # check if we in a debug session, use dynamic or static mode
-inDebug = inDebugSession(r2proj)
+inDebug = inDebugSession(rzproj)
 if inDebug:
     print(colored("start r4ge in DYNAMIC mode...{}".format("(STDOUT checking mode)" if use_stdout else ""), "blue", attrs=["bold"]))
 else:
     print(colored("start r4ge in STATIC mode...{}".format("(STDOUT checking mode)" if use_stdout else ""), "blue", attrs=["bold"]))
 
 # get flag offsets
-find_offset, avoid_offsets, start_offset = getOffsets(r2proj)
+find_offset, avoid_offsets, start_offset = getOffsets(rzproj)
 if ( find_offset == 0 and use_stdout == False ):
     print(colored("no find flag found... stop execution", "red", attrs=["bold"]))
     exit(0)
@@ -40,8 +40,8 @@ if ( inDebug == False and start_offset == 0 ):
     exit(0)
 
 
-# check if binary is PIE, if yes -> set offset to r2 offset
-ispie, binoffset = isPIE(r2proj)
+# check if binary is PIE, if yes -> set offset to rz offset
+ispie, binoffset = isPIE(rzproj)
 load_options = {}
 load_options['auto_load_libs'] = False
 if ispie:
@@ -49,9 +49,9 @@ if ispie:
     load_options['main_opts'] = {'base_addr': binoffset}
 
 # get binary name and create angr project
-binaryname = getBinaryName(r2proj)
+binaryname = getBinaryName(rzproj)
 angrproj = angr.Project(binaryname, load_options=load_options)
-isX86 = isArchitectureX86(r2proj) # get the architecture type x86 or x64
+isX86 = isArchitectureX86(rzproj) # get the architecture type x86 or x64
 
 if inDebug:
     # prepare dynamic execution
@@ -61,7 +61,7 @@ if inDebug:
 
 
     # get symbolic memory region, 0=offset, 1=size, 2=name
-    symb_memories = getSymbolicMemoryRegions(r2proj)
+    symb_memories = getSymbolicMemoryRegions(rzproj)
     if len(symb_memories) == 0:
         print(colored("no symbolic memory found... stop execution", "red", attrs=["bold"]))
         exit(0)
@@ -69,23 +69,23 @@ if inDebug:
     
 
     # copy registers to blank(start) state
-    current_stack_pointer = copyRegisterValues(r2proj, start_state, isX86)
+    current_stack_pointer = copyRegisterValues(rzproj, start_state, isX86)
 
     # copy Stack
-    stack_start = getStackStart( r2proj )
+    stack_start = getStackStart( rzproj )
     stack_size = stack_start - current_stack_pointer
     print(colored("setup Stack: {0}-{1}, size: {2}".format( hex(stack_start), hex(current_stack_pointer), stack_size), "green"))
-    setupMemoryRegion( r2proj, start_state, current_stack_pointer, stack_size, isX86 )
+    setupMemoryRegion( rzproj, start_state, current_stack_pointer, stack_size, isX86 )
 
     # copy Heap ( if there is some used )
-    (top_chunk, brk_start) = (0,0) #checkForHeap( r2proj )
+    (top_chunk, brk_start) = (0,0) #checkForHeap( rzproj )
     if top_chunk != 0 and brk_start != 0 and False:
         heap_size = top_chunk - brk_start
         print(colored("setup Heap: {0}-{1}, size: {2}".format( hex(top_chunk), hex(brk_start), heap_size ), "green"))
-        setupMemoryRegion( r2proj, start_state, brk_start, heap_size, isX86 )
+        setupMemoryRegion( rzproj, start_state, brk_start, heap_size, isX86 )
 
     # now set symbolic memory, adds symbolic variable to symb_memories list entries
-    setSymbolicMemoryRegions( r2proj, start_state, symb_memories )
+    setSymbolicMemoryRegions( rzproj, start_state, symb_memories )
 
 else:
     # prepare static execution -> no copying of the memory
@@ -93,7 +93,7 @@ else:
 
 
 # set up hooks for symbolic execution
-hook_variables = getHooks( r2proj )
+hook_variables = getHooks( rzproj )
 if len(hook_variables):
     for hook in hook_variables:
         # 0=address, 1=patch_length, 2=instructions
@@ -101,7 +101,7 @@ if len(hook_variables):
         print(colored("setup Hook: {}, addr: {}, patchlength: {}, instr: {}".format( hook[3], hex(hook[0]), hook[1], hook[2] ), "green"))
 
 # get all asserts
-assert_variables = getAsserts( r2proj ) # 0=offset, 1=comparisons, 2=comment
+assert_variables = getAsserts( rzproj ) # 0=offset, 1=comparisons, 2=comment
 if len(assert_variables):
     for ass in assert_variables:
         angrproj.hook(ass[0], make_assert(ass[1], ass[2]), length=0)
@@ -169,28 +169,27 @@ if inDebug:
     # debug mode: concrete symbolic memory and print it
     # give user possiblity to continue execution at find target
 
-    if state_found == None:
+    if state_found is None:
         exit(0)
 
     # 0=offset, 1=size, 2=name, 3=symb_var
-    for symb_memory in symb_memories:        
+    for symb_memory in symb_memories:
         mem = state_found.memory.load(symb_memory[0], symb_memory[1])
         symb_memory.append( state_found.solver.eval_upto(mem, 1, cast_to=bytes) )
         print(colored("symbolic memory - {} - {}".format(symb_memory[4][0], hex(int(binascii.hexlify(symb_memory[4][0][::-1]),16))), "green"))
         #print "dumps(1):",state_found.posix.dumps(1) # maybe also print the posix dumps
 
     # open IPython shell
-    IPython.embed()
+    #IPython.embed()
 
-    # debug to find address, step until r2-command
+    # debug to find address, step until rz-command
     if checkUserPrompt("Do you want to set debugsession to find address"):
 
-        print(colored("concretize symbolic memory in r2...", "green"))
+        print(colored("concretize symbolic memory in rz...", "green"))
         for symb_memory in symb_memories:
-            concretizeSymbolicMemory(r2proj, symb_memory[0], symb_memory[4])
+            concretizeSymbolicMemory(rzproj, symb_memory[0], symb_memory[4])
 
-        print("jump to find address")
-        r2proj.cmd("dsu {0}".format( find_offset ))
+        rzproj.cmd("dsu {0}".format( find_offset ))
 
 else:
     # static mode: print stdin and open ipython shell to perform manual concretization 

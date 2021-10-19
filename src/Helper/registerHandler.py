@@ -4,46 +4,50 @@ import r2pipe, angr
 '''
     copies all registers to the {angr_state}
 '''
-def copyRegisterValues( r2proj, angr_state, isX86 ):
+def copyRegisterValues( rzproj, angr_state, isX86 ):
 
     # copy registers to blank(start) state
-    registers = r2proj.cmdj("drj")
+    registers = rzproj.cmdj("drrj")
+    reg_dic = {}
+    for reg in registers:
+      reg_dic[reg['reg']] =  int(reg['value'], 16)
+
     if isX86:
-        angr_state.regs.eip = registers['eip']     # execution start
-        angr_state.regs.esp = registers['esp']     # stack pointer
-        angr_state.regs.ebp = registers['ebp']     # base pointer
-        angr_state.regs.esi = registers['esi']     # source index
-        angr_state.regs.edi = registers['edi']     # destination index
+        angr_state.regs.eip = reg_dic['eip']     # execution start
+        angr_state.regs.esp = reg_dic['esp']     # stack pointer
+        angr_state.regs.ebp = reg_dic['ebp']     # base pointer
+        angr_state.regs.esi = reg_dic['esi']     # source index
+        angr_state.regs.edi = reg_dic['edi']     # destination index
 
         # general purpose registers
-        angr_state.regs.eax = registers['eax']
-        angr_state.regs.ebx = registers['ebx']
-        angr_state.regs.ecx = registers['ecx']
-        angr_state.regs.edx = registers['edx']
+        angr_state.regs.eax = reg_dic['eax']
+        angr_state.regs.ebx = reg_dic['ebx']
+        angr_state.regs.ecx = reg_dic['ecx']
+        angr_state.regs.edx = reg_dic['edx']
 
-        return registers['esp']
+        return reg_dic['esp']
     else:
-        angr_state.regs.rip = registers['rip']
-        angr_state.regs.rsp = registers['rsp']
-        angr_state.regs.rbp = registers['rbp']
-        angr_state.regs.rsi = registers['rsi']
-        angr_state.regs.rdi = registers['rdi']
+        angr_state.regs.rip = reg_dic['rip']
+        angr_state.regs.rsp = reg_dic['rsp']
+        angr_state.regs.rbp = reg_dic['rbp']
+        angr_state.regs.rsi = reg_dic['rsi']
+        angr_state.regs.rdi = reg_dic['rdi']
 
-        angr_state.regs.rax = registers['rax']
-        angr_state.regs.rbx = registers['rbx']
-        angr_state.regs.rcx = registers['rcx']
-        angr_state.regs.rdx = registers['rdx']
+        angr_state.regs.rax = reg_dic['rax']
+        angr_state.regs.rbx = reg_dic['rbx']
+        angr_state.regs.rcx = reg_dic['rcx']
+        angr_state.regs.rdx = reg_dic['rdx']
 
-        angr_state.regs.r8 = registers['r8']
-        angr_state.regs.r9 = registers['r9']
-        angr_state.regs.r10 = registers['r10']
-        angr_state.regs.r11 = registers['r11']
-        angr_state.regs.r12 = registers['r12']
-        angr_state.regs.r13 = registers['r13']
-        angr_state.regs.r14 = registers['r14']
-        angr_state.regs.r15 = registers['r15']
+        angr_state.regs.r8 = reg_dic['r8']
+        angr_state.regs.r9 = reg_dic['r9']
+        angr_state.regs.r10 = reg_dic['r10']
+        angr_state.regs.r11 = reg_dic['r11']
+        angr_state.regs.r12 = reg_dic['r12']
+        angr_state.regs.r13 = reg_dic['r13']
+        angr_state.regs.r14 = reg_dic['r14']
+        angr_state.regs.r15 = reg_dic['r15']
 
-        return registers['rsp']
+        return reg_dic['rsp']
 
 
 def registerSet(state, register, value):
