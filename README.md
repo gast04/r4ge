@@ -1,57 +1,57 @@
 # r4ge
 
-A radare2 Plugin to perform symbolic execution with a simple 
+A rizin Plugin to perform symbolic execution with a simple 
 macro call.
 Internally it uses angr as execution engine.
 The Usage is possible with and without debugger, dynamic and 
 static analysis mode.
 
 ## installation
-To "install" it just create r2-macros in your .radare2rc file
+To "install" it just create r2-macros in your .rizinrc file
 with the according path to the r4ge files.
 
-Requirements are of course angr and radare2 and also termcolor which is used
+Requirements are of course angr and rizin and also termcolor which is used
 for colored printing.
 
 ##### needed macros:
 
 main plugin file, performs static and dynamic analysis
 ```sh
-(r4ge; "#!pipe python3 /pathToFile/r4ge.py")
+(r4ge; #!pipe python /home/niku/SharedWin/GitRepos/r4ge/src/r4ge.py)
 ```
 mark a specific memory region as symbolic (addr: start address, bytes: how many bytes, name: name
 the variable)
 ```sh
-(markMemSymbolic addr bytes name; "#!pipe python3 /pathToFile/createVariable.py symb $0 $1 $2")
+(markMemSymbolic addr bytes name; #!pipe python /pathToFile/createVariable.py symb $0 $1 $2)
 ```
 
 create hooks in r2 and patch function calls or other statements (syntax of the instructions: rax=0x4
 or rax=0x4;rbx=0x10)
 ```sh
-(addHook addr instructions bytes comment; "#!pipe python3 /pathToFile/createVariable.py hook $0 $1 $2 $3")
+(addHook addr instructions bytes comment; #!pipe python /pathToFile/createVariable.py hook $0 $1 $2 $3)
 ```
 
 create asserts to check register values during exploration (syntax of the instructions: rax==0x3 or
 rax#=0x3;rax<=0x10) Note: # is used instead of >, cause r2 uses > as pipe operator.
 ```sh
-(addAssert addr assertions comment; "#!pipe python3 /pathToFile/createVariable.py assert $0 $1 $2")
+(addAssert addr assertions comment; #!pipe python3 /pathToFile/createVariable.py assert $0 $1 $2)
 ```
 
 it is also possible to search for a specific string in stdout, just call the makro below. this will
 ignore find flags, but will consider hooks and asserts. (r2 has many special characters so it may not
 be possible to put arbitrary strings in the makro but you can modify the r2-variable by your own)
 ```sh
-(checkStdout content;  "#!pipe python3 /pathToFile/createVariable.py checkstdout $0")
+(checkStdout content;  #!pipe python3 /pathToFile/createVariable.py checkstdout $0)
 ```
 
 create an angr script out of the current r2 session
 ```sh
-(createScript name; "#!pipe python3 /pathToFile/createScript.py $0")
+(createScript name; #!pipe python3 /pathToFile/createScript.py $0)
 ```
 
 call a function and specifiy the return value (currently in development mode)
 ```sh
-(callFunction retval; "#!pipe python3 /pathToFile/callFunction.py $0")
+(callFunction retval; #!pipe python3 /pathToFile/callFunction.py $0)
 ```
 
 ## usage
@@ -74,7 +74,11 @@ short tutorial: https://asciinema.org/a/155856
 do not hesitate to ask or write us an email ;)
 
 ## Updates
-last update 10.06.2021, more will come :)
+
+update 20.10.2021
+- moved to rizin (minimal support only)
+
+update 10.06.2021, more will come :)
 - ported to python3.8 and angr 9.0.7833
 
 ## Example
