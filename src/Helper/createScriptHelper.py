@@ -1,5 +1,5 @@
 
-import r2pipe
+import rzpipe
 from r4geHelper import *
 from memStoreHelper import *
 
