@@ -1,3 +1,6 @@
+
+# radare2 support is discontinued (moved to rizin)
+
 # r4ge
 
 A radare2 Plugin to perform symbolic execution with a simple 
