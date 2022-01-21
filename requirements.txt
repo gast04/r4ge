@@ -1,4 +1,4 @@
 rzpipe==0.1.1
 termcolor==1.1.0
-IPython==7.3.0
+IPython==7.16.3
 angr==9.0.10281
